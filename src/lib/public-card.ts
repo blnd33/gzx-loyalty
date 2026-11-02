@@ -1,5 +1,5 @@
 import 'server-only';
-import { readPublicCard } from './local-store';
+import { readPublicCard } from './data-store';
 import type { PublicLoyaltyCard } from './local-store';
 import { createHash } from 'node:crypto';
 export { readPublicCard };

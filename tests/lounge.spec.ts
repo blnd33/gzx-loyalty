@@ -120,10 +120,9 @@ test('staff login and every main lounge workflow',async({page,context})=>{
   await expect(page.getByText('Settings saved.',{exact:true})).toBeVisible();
   await page.reload();await expect(page.getByLabel('Lounge name',{exact:true})).toHaveValue('Verified Lounge');
   const backupPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Download database backup'}).click();
-  const backup=await backupPromise;const path=await backup.path();expect(readFileSync(path!).subarray(0,15).toString()).toBe('SQLite format 3');
-  const snapshot=new DatabaseSync(path!);expect((snapshot.prepare('SELECT count(*) n FROM customers').get() as {n:number}).n).toBe(1);
-  const qrToken=(snapshot.prepare("SELECT qr_token FROM cards WHERE status='active'").get() as {qr_token:string}).qr_token;
-  snapshot.close();
+  const backup=await backupPromise;const path=await backup.path();let qrToken:string;
+  if(process.env.TEST_DATABASE_URL){const snapshot=JSON.parse(readFileSync(path!,'utf8'));expect(snapshot.format).toBe('gzx-postgres-backup-v1');expect(snapshot.customers).toHaveLength(1);qrToken=snapshot.cards.find((c:{status:string})=>c.status==='active').qr_token;}
+  else{expect(readFileSync(path!).subarray(0,15).toString()).toBe('SQLite format 3');const snapshot=new DatabaseSync(path!);expect((snapshot.prepare('SELECT count(*) n FROM customers').get() as {n:number}).n).toBe(1);qrToken=(snapshot.prepare("SELECT qr_token FROM cards WHERE status='active'").get() as {qr_token:string}).qr_token;snapshot.close();}
   await page.goto(`/c/${qrToken}`);await expect(page).toHaveURL(profileUrl);
 
   await page.goto('/staff');await page.getByLabel('Full name',{exact:true}).fill('Test Cashier');

@@ -1,4 +1,5 @@
 .git
+.netlify
 .next
 node_modules
 data

@@ -1,5 +1,5 @@
 import 'server-only';
-import { readSettings } from '@/lib/local-store';
+import { readSettings } from '@/lib/data-store';
 
 export interface AppSettings {
   lounge_name: string;
@@ -18,5 +18,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export async function getSettings(): Promise<AppSettings> {
-  return { ...DEFAULT_SETTINGS, ...readSettings() } as AppSettings;
+  return { ...DEFAULT_SETTINGS, ...await readSettings() } as AppSettings;
 }

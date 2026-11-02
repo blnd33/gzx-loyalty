@@ -13,7 +13,7 @@ export const metadata: Metadata={title:'My loyalty card',robots:{index:false,fol
 
 export default async function CustomerCard({params}:{params:Promise<{token:string}>}) {
   const {token}=await params;
-  const card=readPublicCard(token);
+  const card=await readPublicCard(token);
   if(!card) notFound();
   const settings=await getSettings();
   const qrSvg=await cardQrSvg(token);

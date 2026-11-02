@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { requireAdmin } from '@/lib/auth';
-import { listStaff } from '@/lib/local-store';
+import { listStaff } from '@/lib/data-store';
 import type { StaffProfile } from '@/lib/types';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StaffManager } from './StaffManager';
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Staff' };
 
 export default async function StaffPage() {
   const me = await requireAdmin();
-  const data=listStaff();
+  const data=await listStaff();
   return (
     <>
       <PageHeader eyebrow="Administration" title="Staff accounts">
