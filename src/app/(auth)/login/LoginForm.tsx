@@ -21,7 +21,13 @@ export function LoginForm({ next, notice }: { next: string; notice: string | nul
     });
     if (error) {
       setPending(false);
-      setError(error.status === 429 ? 'Too many attempts. Wait a moment and try again.' : 'Incorrect email or password.');
+      setError(
+        error.status === 429
+          ? 'Too many attempts. Wait a moment and try again.'
+          : !error.status || error.name === 'AuthRetryableFetchError'
+            ? 'Cannot reach the server. Check the internet connection and try again.'
+            : 'Incorrect email or password.',
+      );
       return;
     }
     window.location.assign(next); // full reload so the server sees the new session
