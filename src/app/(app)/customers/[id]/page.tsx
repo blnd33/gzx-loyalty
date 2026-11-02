@@ -12,6 +12,8 @@ import type { CustomerProfile } from '@/lib/types';
 import { CustomerLoyalty } from '@/components/customer/CustomerLoyalty';
 import { CustomerTools } from '@/components/customer/CustomerTools';
 import { ProgressBadge } from '@/components/ui/StatusBadge';
+import { CustomerShare } from '@/components/customer/CustomerShare';
+import { env } from '@/lib/env';
 
 export const metadata: Metadata = { title: 'Customer' };
 
@@ -48,6 +50,8 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
         {!c.active && <span className="badge bg-danger/15 text-[#ff9aab]">Customer deactivated</span>}
       </header>
 
+      {c.card?.status==='active' && c.active && <CustomerShare path={`/card/${c.card.qr_token}`} url={`${env.appUrl}/card/${c.card.qr_token}`} />}
+
       {c.card ? (
         <CustomerLoyalty
           customerId={c.id}
@@ -60,6 +64,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
           cardActive={c.card.status === 'active'}
           customerActive={c.active}
           rewardLabel={settings.reward_label}
+          tagline={settings.card_tagline}
         />
       ) : (
         <p className="panel panel-pad text-muted">This customer has no active card. An admin can reissue one below.</p>

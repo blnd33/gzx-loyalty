@@ -29,7 +29,7 @@ function isActive(path: string, href: string) {
   return path === href || path.startsWith(`${href}/`);
 }
 
-export function AppShell({ staff, children }: { staff: StaffProfile; children: React.ReactNode }) {
+export function AppShell({ staff, children, loungeName = 'GZX Gaming' }: { staff: StaffProfile; children: React.ReactNode; loungeName?: string }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const items = NAV.filter((i) => !i.admin || staff.role === 'super_admin');
@@ -65,6 +65,7 @@ export function AppShell({ staff, children }: { staff: StaffProfile; children: R
       <p className="mb-2 text-xs uppercase tracking-wider text-muted">
         {staff.role === 'super_admin' ? 'Super Admin' : 'Cashier'}
       </p>
+      <Link href="/account" className="btn-ghost mb-2 w-full text-sm">My password</Link>
       <form action="/auth/signout" method="post">
         <button className="btn-ghost w-full text-sm" type="submit">
           <LogOut className="h-4 w-4" aria-hidden /> Sign out
@@ -81,7 +82,7 @@ export function AppShell({ staff, children }: { staff: StaffProfile; children: R
 
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-rail/95 px-4 py-5 lg:flex">
-        <Link href="/" className="mb-7 px-1"><Logo /></Link>
+        <Link href="/" className="mb-7 px-1"><Logo /><span className="mt-3 block text-sm text-muted">{loungeName}</span></Link>
         <nav aria-label="Main" className="flex-1 overflow-y-auto">{navList}</nav>
         {userBlock}
       </aside>

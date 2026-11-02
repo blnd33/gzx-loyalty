@@ -1,0 +1,62 @@
+name: gzx-loyalty
+services:
+  app:
+    build: .
+    image: gzx-loyalty:server
+    restart: unless-stopped
+    init: true
+    environment:
+      DEPLOYMENT_MODE: server
+      APP_URL: https://${APP_DOMAIN:?Configure APP_DOMAIN in .env.server}
+      LOCAL_DB_PATH: /app/data/lounge.sqlite
+      BACKUP_DIR: /app/backups
+      OWNER_EMAIL: ${OWNER_EMAIL:-admin@lounge.local}
+      OWNER_PASSWORD_FILE: /run/secrets/owner_password
+      TRUST_PROXY: '1'
+    secrets:
+      - owner_password
+    volumes:
+      - lounge_data:/app/data
+      - lounge_backups:/app/backups
+    networks:
+      - lounge
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Configure APP_DOMAIN in .env.server}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - lounge
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+secrets:
+  owner_password:
+    file: ./.secrets/owner_password
+volumes:
+  lounge_data:
+  lounge_backups:
+  caddy_data:
+  caddy_config:
+networks:
+  lounge:

@@ -38,6 +38,7 @@ export function LoyaltyCardBack({
   justPunched = null,
   className = '',
   glow = true,
+  tagline,
 }: CardBackProps) {
   const live = variant === 'live';
   const filled = live ? Math.max(0, Math.min(3, punches)) : 0;
@@ -117,7 +118,7 @@ export function LoyaltyCardBack({
 
       <div className="gzx-banner">
         <span className="gzx-banner__text">
-          Play <b>3 hours</b> · Get the 4th hour <b>FREE + DRINK</b>
+          {tagline || <>Play <b>3 hours</b> · Get the 4th hour <b>FREE + DRINK</b></>}
         </span>
       </div>
     </div>

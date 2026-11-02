@@ -10,6 +10,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     : sp.error === 'link_expired' ? 'That link has expired. Request a new password reset.'
     : sp.reset === '1' ? 'Password updated. Sign in with your new password.'
     : null;
-  const next = sp.next && sp.next.startsWith('/') && !sp.next.startsWith('//') ? sp.next : '/';
+  const next = sp.next && sp.next.startsWith('/') && !sp.next.startsWith('//') && !/[\\\x00-\x20]/.test(sp.next) ? sp.next : '/';
   return <LoginForm next={next} notice={notice} />;
 }

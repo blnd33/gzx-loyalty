@@ -1,5 +1,7 @@
 // Database functions raise stable codes; translate them for staff.
 const MESSAGES: Record<string, string> = {
+  EMAIL_EXISTS: 'A staff account with that email already exists.',
+  INVALID_PASSWORD: 'Use a password with at least 10 characters.',
   NOT_AUTHENTICATED: 'Your session has expired. Please sign in again.',
   FORBIDDEN: 'You do not have permission to do that.',
   CUSTOMER_NOT_FOUND: 'No customer found with that code. Check the letters and try again.',

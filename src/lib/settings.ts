@@ -1,5 +1,5 @@
 import 'server-only';
-import { createClient } from '@/lib/supabase/server';
+import { readSettings } from '@/lib/local-store';
 
 export interface AppSettings {
   lounge_name: string;
@@ -18,9 +18,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export async function getSettings(): Promise<AppSettings> {
-  const supabase = await createClient();
-  const { data } = await supabase.from('application_settings').select('setting_key, setting_value');
-  const out: Record<string, unknown> = { ...DEFAULT_SETTINGS };
-  for (const row of data ?? []) out[row.setting_key] = row.setting_value;
-  return out as unknown as AppSettings;
+  return { ...DEFAULT_SETTINGS, ...readSettings() } as AppSettings;
 }

@@ -1,3 +1,6 @@
+data/
+*.sqlite*
+*.log
 node_modules
 .next
 out
@@ -8,4 +11,8 @@ out
 next-env.d.ts
 .vercel
 coverage
+test-results/
+playwright-report/
 backups/
+.env.server
+.secrets/

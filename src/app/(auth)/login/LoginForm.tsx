@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Loader2, LogIn } from 'lucide-react';
-import { createClient } from '@/lib/supabase/browser';
+import { signIn } from '@/lib/actions/session';
 
 export function LoginForm({ next, notice }: { next: string; notice: string | null }) {
   const [pending, setPending] = useState(false);
@@ -14,22 +14,8 @@ export function LoginForm({ next, notice }: { next: string; notice: string | nul
     setPending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: String(form.get('email')).trim(),
-      password: String(form.get('password')),
-    });
-    if (error) {
-      setPending(false);
-      setError(
-        error.status === 429
-          ? 'Too many attempts. Wait a moment and try again.'
-          : !error.status || error.name === 'AuthRetryableFetchError'
-            ? 'Cannot reach the server. Check the internet connection and try again.'
-            : 'Incorrect email or password.',
-      );
-      return;
-    }
+    const result=await signIn(String(form.get('email')).trim(),String(form.get('password')));
+    if(!result.ok) { setPending(false); setError(result.error??'Sign in failed.'); return; }
     window.location.assign(next); // full reload so the server sees the new session
   }
 
@@ -51,7 +37,7 @@ export function LoginForm({ next, notice }: { next: string; notice: string | nul
       {error && <p role="alert" className="field-error">{error}</p>}
       <button type="submit" disabled={pending} className="btn-primary btn-lg w-full">
         {pending ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <LogIn className="h-5 w-5" aria-hidden />}
-        {pending ? 'Signing in…' : 'Sign in'}
+        {pending ? 'Signing inâ€¦' : 'Sign in'}
       </button>
       <p className="text-center text-sm">
         <Link href="/forgot-password" className="text-muted underline-offset-4 hover:text-white hover:underline">

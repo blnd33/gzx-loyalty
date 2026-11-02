@@ -1,21 +1,12 @@
 import 'server-only';
-import { createClient } from '@/lib/supabase/server';
+import { getStaff } from '@/lib/auth';
+import { localRpc } from '@/lib/local-store';
 import { errorCode, friendlyError } from '@/lib/errors';
-
 export class RpcError extends Error {
-  constructor(public code: string) {
-    super(friendlyError(code));
-  }
+  constructor(public code: string) { super(friendlyError(code)); }
 }
-
-/** Calls a Postgres function as the signed-in staff member. */
 export async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc(fn, args);
-  if (error) {
-    const code = errorCode(error);
-    if (code === 'UNKNOWN') console.error(`[rpc:${fn}]`, error);
-    throw new RpcError(code);
-  }
-  return data as T;
+  const staff=await getStaff(); if(!staff) throw new RpcError('NOT_AUTHENTICATED');
+  try { return localRpc(fn,args??{},staff.id) as T; }
+  catch(error) { const code=errorCode(error); if(code==='UNKNOWN') console.error(`[local:${fn}]`,error); throw new RpcError(code); }
 }

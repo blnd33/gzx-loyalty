@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireStaff } from '@/lib/auth';
 import { rpc, RpcError } from '@/lib/rpc';
 import { cardQrSvg } from '@/lib/qr';
+import { getSettings } from '@/lib/settings';
 import { uuidSchema } from '@/lib/validation';
 import type { CustomerProfile } from '@/lib/types';
 import { LoyaltyCardBack, LoyaltyCardFront } from '@/components/card/LoyaltyCard';
@@ -33,6 +34,7 @@ export default async function PrintPage({ params, searchParams }: {
   }
   if (!c.card) notFound();
   const qr = await cardQrSvg(c.card.qr_token);
+  const settings = await getSettings();
   const marks = sp.marks === '1';
 
   return (
@@ -61,7 +63,7 @@ export default async function PrintPage({ params, searchParams }: {
             {side === 'front' ? (
               <LoyaltyCardFront glow={false} />
             ) : (
-              <LoyaltyCardBack name={c.name} code={c.card!.code} qrSvg={qr} punches={0} rewardAvailable={false} variant="print" glow={false} />
+              <LoyaltyCardBack name={c.name} code={c.card!.code} qrSvg={qr} punches={0} rewardAvailable={false} variant="print" glow={false} tagline={settings.card_tagline} />
             )}
           </div>
           {marks && <CropMarks />}

@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Loader2, Pencil, ShieldCheck, UserPlus } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { createStaff, updateStaff } from '@/lib/actions/admin';
+import { createStaff, updateStaff, resetStaffPassword } from '@/lib/actions/admin';
 import { formatDate } from '@/lib/format';
 import type { Role, StaffProfile } from '@/lib/types';
 
@@ -14,6 +14,7 @@ export function StaffManager({ staff, meId, serviceKeyConfigured }: { staff: Sta
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<StaffProfile | null>(null);
+  const [newPassword,setNewPassword]=useState('');
   const [edit, setEdit] = useState({ fullName: '', role: 'cashier' as Role, active: true });
 
   function onCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -38,6 +39,7 @@ export function StaffManager({ staff, meId, serviceKeyConfigured }: { staff: Sta
     startTransition(async () => {
       const res = await updateStaff({ staffId: editing.id, ...edit });
       if (!res.ok) { toast.error(res.error); return; }
+      if(newPassword) { const reset=await resetStaffPassword(editing.id,newPassword); if(!reset.ok) { toast.error(reset.error); return; } setNewPassword(''); }
       toast.success('Staff member updated.');
       setEditing(null);
       router.refresh();
@@ -61,7 +63,7 @@ export function StaffManager({ staff, meId, serviceKeyConfigured }: { staff: Sta
                 <td>{s.active ? <span className="text-success">Active</span> : <span className="text-muted">Disabled</span>}</td>
                 <td className="text-muted">{formatDate(s.created_at)}</td>
                 <td className="text-right">
-                  <button className="btn-ghost min-h-[36px] px-3 text-sm" onClick={() => { setEditing(s); setEdit({ fullName: s.full_name, role: s.role, active: s.active }); }}>
+                  <button className="btn-ghost min-h-[36px] px-3 text-sm" onClick={() => { setNewPassword(''); setEditing(s); setEdit({ fullName: s.full_name, role: s.role, active: s.active }); }}>
                     <Pencil className="h-4 w-4" aria-hidden /> Edit
                   </button>
                 </td>
@@ -83,7 +85,7 @@ export function StaffManager({ staff, meId, serviceKeyConfigured }: { staff: Sta
         <div>
           <label className="field-label" htmlFor="password">Temporary password</label>
           <input id="password" name="password" type="password" minLength={10} required className="input" autoComplete="new-password" />
-          <p className="field-help">At least 10 characters. They can change it with “Forgot password”.</p>
+          <p className="field-help">At least 10 characters. They can change it in My password. Admins can reset it here.</p>
         </div>
         <div>
           <label className="field-label" htmlFor="role">Role</label>
@@ -107,6 +109,9 @@ export function StaffManager({ staff, meId, serviceKeyConfigured }: { staff: Sta
             <select id="ed-role" className="input" value={edit.role} onChange={(e) => setEdit({ ...edit, role: e.target.value as Role })}>
               <option value="cashier">Cashier</option><option value="super_admin">Super admin</option>
             </select></div>
+          <div><label className="field-label" htmlFor="ed-password">Reset password (optional)</label>
+            <input id="ed-password" type="password" minLength={10} maxLength={72} autoComplete="new-password" className="input" value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} />
+            <p className="field-help">Leave blank to keep the current password. A reset signs the member out.</p></div>
           <label className="flex min-h-[44px] items-center gap-3">
             <input type="checkbox" className="h-5 w-5 accent-[#FF6B00]" checked={edit.active} onChange={(e) => setEdit({ ...edit, active: e.target.checked })} />
             <span>Account active</span>

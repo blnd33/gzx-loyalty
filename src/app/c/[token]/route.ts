@@ -1,25 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getStaff } from '@/lib/auth';
+import { rpc } from '@/lib/rpc';
 import { isValidToken } from '@/lib/code';
-
-/**
- * Target of the URL printed in each card's QR code. Only signed-in staff are
- * resolved to a profile; anyone else is sent to the login page and learns
- * nothing about the customer. Opening the link never adds a punch.
- */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  const origin = new URL(request.url).origin;
-  if (!isValidToken(token)) return NextResponse.redirect(new URL('/scan?error=INVALID_QR', origin));
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.redirect(new URL(`/login?next=/c/${token}`, origin));
-
-  const { data, error } = await supabase.rpc('find_customer_by_qr', { p_token: token });
-  if (error) return NextResponse.redirect(new URL('/scan?error=FORBIDDEN', origin));
-  if (data?.error || !data?.customer_id) {
-    return NextResponse.redirect(new URL(`/scan?error=${encodeURIComponent(data?.error ?? 'CUSTOMER_NOT_FOUND')}`, origin));
+import { redirectBase } from '@/lib/deployment';
+export async function GET(request: NextRequest,{params}:{params:Promise<{token:string}>}) {
+  const {token}=await params;
+  const base=redirectBase(request.url,request.headers.get('host'));
+  if(!isValidToken(token)) return NextResponse.redirect(new URL('/scan?error=INVALID_QR',base));
+  if(!await getStaff()) {
+    const response=NextResponse.redirect(new URL(`/card/${token}`,base));
+    response.headers.set('Cache-Control','private, no-store');response.headers.set('Referrer-Policy','no-referrer');
+    return response;
   }
-  return NextResponse.redirect(new URL(`/customers/${data.customer_id}`, origin));
+  try {
+    const data=await rpc<{customer_id?:string;error?:string}>('find_customer_by_qr',{p_token:token});
+    return NextResponse.redirect(new URL(data.customer_id?`/customers/${data.customer_id}`:`/scan?error=${data.error??'CUSTOMER_NOT_FOUND'}`,base));
+  } catch { return NextResponse.redirect(new URL('/scan?error=FORBIDDEN',base)); }
 }

@@ -24,6 +24,7 @@ interface Props {
   cardActive: boolean;
   customerActive: boolean;
   rewardLabel: string;
+  tagline?: string;
 }
 
 export function CustomerLoyalty(p: Props) {
@@ -139,7 +140,7 @@ export function CustomerLoyalty(p: Props) {
         <div className="mx-auto max-w-[640px]">
           {side === 'back' ? (
             <LoyaltyCardBack name={p.name} code={p.code} qrSvg={p.qrSvg} punches={p.punches}
-              rewardAvailable={p.rewardAvailable} justPunched={justPunched} />
+              rewardAvailable={p.rewardAvailable} justPunched={justPunched} tagline={p.tagline} />
           ) : (
             <LoyaltyCardFront />
           )}
@@ -236,7 +237,7 @@ export function CustomerLoyalty(p: Props) {
       <div aria-hidden className="pointer-events-none fixed -left-[5000px] top-0 w-[1011px]">
         <div ref={frontRef}><LoyaltyCardFront glow={false} /></div>
         <div ref={backRef}>
-          <LoyaltyCardBack name={p.name} code={p.code} qrSvg={p.qrSvg} punches={p.punches} rewardAvailable={p.rewardAvailable} glow={false} />
+          <LoyaltyCardBack name={p.name} code={p.code} qrSvg={p.qrSvg} punches={p.punches} rewardAvailable={p.rewardAvailable} glow={false} tagline={p.tagline} />
         </div>
       </div>
       <span className="sr-only" aria-live="polite">{p.punches} of 3 paid hours{p.rewardAvailable ? ', reward available' : ''}</span>
