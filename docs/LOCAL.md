@@ -6,18 +6,22 @@ The complete lounge app runs on one Windows computer with a SQLite database. No 
 
 1. Install Node.js **24.14 or later** if this is a new computer.
 2. Double-click **Start Lounge.cmd**. On a new computer the first run installs packages and builds the app, so internet is needed for that first run.
-3. Open **http://localhost:3000**. The launcher opens it automatically.
+3. Start Lounge detects the computer's current Wi-Fi/LAN address and opens it. The current address is also saved in **data/LAN-ADDRESS.txt**. Use that address on phones connected to the same lounge Wi-Fi.
 4. Your initial owner email and random password are in **data/OWNER-LOGIN.txt**. Sign in and use **My password** to change the password.
 
-The launcher keeps the server running in the background. Use Start Lounge again after restarting Windows. The computer must stay on while using the app. This installation listens only on this computer; it is not published to the internet.
+The launcher keeps the server running in the background, listening on the lounge network. Use Start Lounge again after restarting Windows. The computer must stay on while using the app, and customer phones must use the same lounge Wi-Fi (guest/client isolation may block access). No internet hosting or Netlify database is used. For a computer-only session run `powershell -File scripts/start-local.ps1 -LocalOnly`.
+
+The launcher explicitly selects the local SQLite backend even if cloud database settings exist elsewhere. Existing customer records and accounts are kept. To create an additional administrator, run `node --experimental-strip-types scripts/local-admin.mjs` after initialization; its initial login details are stored privately in **data/LOCAL-ADMIN-LOGIN.txt**. Never commit either login file to Git.
+
+The computer must allow inbound Node.js traffic on TCP port 3000 from the lounge network. Existing Windows firewall rules may already allow it. No router port forwarding or public internet exposure is needed. Reserve the computer's LAN IP in your router before printing permanent cards; an address change can make old QR URLs unreachable even though six-letter codes and saved records remain valid.
 
 ## Daily use
 
-- Customer access: open any customer, then use Customer view or Copy customer link. Their private link and printed QR show read-only progress without staff login. Localhost links work on this computer; after online deployment, customers can open the real domain on their phones.
+- Customer access: open any customer, then use Customer view or Copy customer link. Their private link and printed QR show read-only progress without staff login. Newly generated links use the computer's current LAN address, so phones on the same Wi-Fi can view them. Paid hours and rewards update automatically from this one shared local database. Reprint cards whose QR still contains localhost.
 
 - Dashboard: the four quick actions open the real registration, search, and customer pages.
 - New Customer: enter a name, optional phone and notes; a unique six-letter code and QR are issued.
-- Scan / Find: scan a card using a camera attached to the computer, or type the code. A USB scanner that types the six-letter code also works.
+- Scan / Find: use a computer webcam at localhost, Scan QR from photo on the local network, or type the code. The photo option uses your phone's camera/file picker where supported and decodes on the device. Live in-browser camera streaming requires HTTPS; the photo and six-letter options support local HTTP. A USB scanner that types the six-letter code also works.
 - Customer: Add 1 paid hour and confirm the payment. The third paid hour unlocks one free hour and one free drink.
 - Redeem reward: confirm redemption; the next cycle starts at 0/3. All prior hours and rewards remain in history.
 - Print card: prints the front and back; crop marks can be toggled. Download PNG saves artwork; Copy code copies the card code.

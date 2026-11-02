@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { addPaidHour, redeemReward } from '@/lib/actions/loyalty';
 import { useIdempotencyKey } from '@/lib/useIdempotencyKey';
 import { downloadNodeAsPng } from './CardExport';
+import { copyText } from '@/lib/clipboard';
 
 interface Props {
   customerId: string;
@@ -103,7 +104,7 @@ export function CustomerLoyalty(p: Props) {
 
   async function copyCode() {
     try {
-      await navigator.clipboard.writeText(p.code);
+      await copyText(p.code);
       toast.success(`Code ${p.code} copied`);
     } catch {
       toast.error('Could not copy — select the code manually.');

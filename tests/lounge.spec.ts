@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, unlinkSync } from 'node:fs';
+import QRCode from 'qrcode';
 
 test('staff login and every main lounge workflow',async({page,context})=>{
+  if(process.env.E2E_LAN_MODE==='1')await page.addInitScript(()=>{Object.defineProperty(globalThis.crypto,'randomUUID',{value:undefined,configurable:true});Object.defineProperty(navigator,'clipboard',{value:undefined,configurable:true});});
   await context.grantPermissions(['clipboard-read','clipboard-write']);
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/dashboard');await expect(page).toHaveURL(/\/login/);
@@ -65,6 +67,10 @@ test('staff login and every main lounge workflow',async({page,context})=>{
   await expect(page.getByText('Reward redeemed',{exact:true}).first()).toBeVisible();
   await page.goto('/scan');await page.getByLabel('Enter customer code').fill(code.toLowerCase());
   await page.getByRole('button',{name:'Find customer',exact:true}).click();
+  await expect(page).toHaveURL(profileUrl);
+
+  await page.goto('/scan');
+  await page.getByLabel('QR code photo',{exact:true}).setInputFiles({name:'loyalty-card.png',mimeType:'image/png',buffer:await QRCode.toBuffer(`http://lounge/c/${customerPath!.split('/').at(-1)}`,{width:600,margin:4})});
   await expect(page).toHaveURL(profileUrl);
 
   await page.getByRole('button',{name:'Edit details',exact:true}).click();

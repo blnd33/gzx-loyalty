@@ -1,5 +1,5 @@
 import 'server-only';
-export function usesPostgres(){return process.env.DATABASE_PROVIDER==='netlify'||!!process.env.NETLIFY_DB_URL||!!process.env.TEST_DATABASE_URL;}
+export function usesPostgres(){if(process.env.DATABASE_PROVIDER==='local')return false;return ['netlify','neon','postgres'].includes(process.env.DATABASE_PROVIDER||'')||!!process.env.DATABASE_URL||!!process.env.NETLIFY_DB_URL||!!process.env.TEST_DATABASE_URL;}
 async function backend(){return usesPostgres()?import('./postgres-store'):import('./local-store');}
 let ownerReady:Promise<void>|undefined;
 async function ensureOwner(){

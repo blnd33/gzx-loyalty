@@ -27,6 +27,8 @@ export function QrScanner() {
   const [message, setMessage] = useState<string | null>(null);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [cameraId, setCameraId] = useState<string>('');
+  const photoRef=useRef<HTMLInputElement>(null);
+  const [readingPhoto,setReadingPhoto]=useState(false);
 
   const stop = useCallback(() => {
     window.clearTimeout(timerRef.current);
@@ -72,6 +74,23 @@ export function QrScanner() {
     busyRef.current = false;
     setStatus(streamRef.current ? 'scanning' : 'idle');
   }, [router, stop]);
+
+  async function scanPhoto(file:File) {
+    if(file.size>20*1024*1024){toast.error('Choose a photo smaller than 20 MB.');return;}
+    stop();setStatus('idle');setReadingPhoto(true);
+    const url=URL.createObjectURL(file);
+    try{
+      const img=new Image();img.src=url;await img.decode();
+      const scale=Math.min(1,1600/Math.max(img.width,img.height));
+      const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw new Error('Image could not be read');
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      const qr=jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height,{inversionAttempts:'attemptBoth'});
+      if(!qr){toast.error('No QR found. Try a clear, close photo of the code.');return;}
+      await handleText(qr.data);
+    }catch{toast.error('Could not read this photo. Choose another image or enter the card code.');}
+    finally{URL.revokeObjectURL(url);setReadingPhoto(false);if(photoRef.current)photoRef.current.value='';}
+  }
 
   const tick = useCallback(async () => {
     const video = videoRef.current;
@@ -194,7 +213,7 @@ export function QrScanner() {
               <>
                 <ShieldAlert className="h-10 w-10 text-neon-gold" aria-hidden />
                 <p className="font-semibold">Camera needs HTTPS</p>
-                <p className="text-sm text-muted">Open the app from its https:// address to use the scanner.</p>
+                <p className="text-sm text-muted">On lounge Wi-Fi, use Scan QR from photo below, or enter the 6-letter code.</p>
               </>
             ) : status === 'error' ? (
               <>
@@ -212,6 +231,8 @@ export function QrScanner() {
       </div>
 
       <div className="mx-auto mt-4 flex max-w-[26rem] flex-col gap-2">
+        <input ref={photoRef} type="file" accept="image/*" capture="environment" aria-label="QR code photo" className="sr-only" onChange={e=>{const file=e.target.files?.[0];if(file)void scanPhoto(file);}} />
+        <button className="btn-ghost btn-lg w-full" disabled={readingPhoto} onClick={()=>photoRef.current?.click()}>{readingPhoto?<Loader2 className="h-5 w-5 animate-spin" />:<Camera className="h-5 w-5" />}Scan QR from photo</button>
         {live ? (
           <button className="btn-ghost btn-lg w-full" onClick={() => { stop(); setStatus('idle'); }}>
             <Square className="h-5 w-5" aria-hidden /> Stop scanning

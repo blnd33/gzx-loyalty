@@ -1,13 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import pg from 'pg';
-import { getConnectionString } from '@netlify/database';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomBytes, randomInt, randomUUID, createHash, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { StaffProfile } from './types';
 type SQLInputValue = string | number | boolean | null;
 pg.types.setTypeParser(20, Number);
 let pool: pg.Pool | undefined;
-function connection() { return pool ??= new pg.Pool({ connectionString: process.env.TEST_DATABASE_URL || getConnectionString(), max: 3, allowExitOnIdle: true, connectionTimeoutMillis: 10000 }); }
+function connection() {
+    const connectionString=process.env.TEST_DATABASE_URL||process.env.DATABASE_URL||process.env.NETLIFY_DB_URL;
+    if(!connectionString)throw new Error('Configure a persistent DATABASE_URL before using the online app.');
+    if (!pool) {
+        pool = new pg.Pool({ connectionString, max:3,allowExitOnIdle:true,connectionTimeoutMillis:10000,idleTimeoutMillis:10000 });
+        // An idle connection can close while the database or function is suspended.
+        // pg removes it from the pool; later requests can open a new connection.
+        pool.on('error', () => console.error('An idle database connection closed; it will be reconnected.'));
+    }
+    return pool;
+}
 const context = new AsyncLocalStorage<pg.PoolClient>();
 function sql(text: string) { let index = 0; return text.replace(/email=\? COLLATE NOCASE/g, 'lower(email)=lower(?)').replace(/\?/g, () => '$' + (++index)); }
 async function all(text: string, ...args: SQLInputValue[]) { return (await (context.getStore() ?? connection()).query(sql(text), args)).rows; }
